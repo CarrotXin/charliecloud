@@ -344,7 +344,15 @@ nogroup:x:65534:
       if (self.layer_hashes is None):
          self.layer_hashes_load()
       layers = collections.OrderedDict()
+      # Schema version one (v1) allows one or more empty layers for Dockerfile
+      # entries like CMD (https://github.com/containers/skopeo/issues/393).
+      # Unpacking an empty layer does nothing so we ignore them.
+      empty_lh = 'a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4'
       for (i, lh) in enumerate(self.layer_hashes, start=1):
+         if lh == empty_lh:
+            INFO("layer %d/%d: %s: skipping (empty)"
+                 % (i, len(self.layer_hashes), lh[:7]))
+            continue
          INFO("layer %d/%d: %s: listing" % (i, len(self.layer_hashes), lh[:7]))
          path = self.layer_path(lh)
          try:
@@ -354,10 +362,10 @@ nogroup:x:65534:
             FATAL("cannot open: %s: %s" % (path, x))
          members = collections.OrderedDict([(m, None) for m in members_list])
          if lh in layers and members:
-            FATAL("duplicate layer %s is non-empty" % lh[:7])
+            FATAL("duplicate non-empty layer %s" % lh[:7])
          layers[lh] = TT(fp, members)
       if self.schema_version == 1:
-         DEBUG('using schema version one (1); revering layer order')
+         DEBUG('reversing layer order for schema version one (1)')
          layers = collections.OrderedDict(reversed(list(layers.items())))
       return layers
 
