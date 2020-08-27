@@ -301,7 +301,7 @@ nogroup:x:65534:
       try:
          doc = json.load(fp)
       except json.JSONDecodeError as x:
-         FATAL("can't parse manifest file: %s:%d %s"
+         FATAL("can't parse manifest file: %s:%d: %s"
                % (self.manifest_path, x.lineno, x.msg))
 
       self.schema_version = doc['schemaVersion']
@@ -318,7 +318,7 @@ nogroup:x:65534:
          except (AttributeError, KeyError, IndexError):
             FATAL("can't parse manifest file: %s" % self.manifest_path)
       else:
-         FATAL("unrecognized manifest schema version: 'schemaVersion' :%s"
+         FATAL("unsupported manifest schema version: 'schemaVersion':%s"
                % self.schema_version)
 
    def layer_path(self, layer_hash):
@@ -353,11 +353,9 @@ nogroup:x:65534:
          except tarfile.TarError as x:
             FATAL("cannot open: %s: %s" % (path, x))
          members = collections.OrderedDict([(m, None) for m in members_list])
-         if members:
-            layers[lh] = TT(fp, members)
-         else:
-            WARNING("layer %d/%d: %s: has no members; ignoring"
-                   % (i, len(self.layer_hashes), lh[:7]))
+         if lh in layers and members:
+            FATAL("duplicate layer %s is non-empty" % lh[:7])
+         layers[lh] = TT(fp, members)
       if self.schema_version == 1:
          DEBUG('using schema version one (1); revering layer order')
          layers = collections.OrderedDict(reversed(list(layers.items())))
