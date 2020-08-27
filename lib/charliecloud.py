@@ -346,10 +346,10 @@ nogroup:x:65534:
       layers = collections.OrderedDict()
       # Schema version one (v1) allows one or more empty layers for Dockerfile
       # entries like CMD (https://github.com/containers/skopeo/issues/393).
-      # Unpacking an empty layer does nothing so we ignore them.
-      empty_lh = 'a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4'
+      # Unpacking an empty layer doesn't accomplish much so we ignore them.
+      empty = 'a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4'
       for (i, lh) in enumerate(self.layer_hashes, start=1):
-         if lh == empty_lh:
+         if lh == empty:
             INFO("layer %d/%d: %s: skipping (empty)"
                  % (i, len(self.layer_hashes), lh[:7]))
             continue
